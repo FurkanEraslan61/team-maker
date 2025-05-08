@@ -1,0 +1,134 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const initialPlayers = [
+  "Ali Kaleci",
+  "Mehmet Kaleci",
+  "Furkan",
+  "Halil",
+  "Cihan",
+  "İsmail",
+  "Mahmut",
+  "Fatih",
+  "Görkem",
+  "Abu",
+  "Haci",
+  "Bedo",
+  "Nazmi",
+  "Yusuf",
+  "Ozan",
+  "Dodo",
+];
+
+const positions = ["Kaleci", "Defans", "Orta Saha", "Forvet"];
+
+export default function HalisahaTakimOlusturucu() {
+  const [players, setPlayers] = useState(
+    initialPlayers.map((name) => ({
+      name,
+      plays: false,
+      position: "Orta Saha",
+    }))
+  );
+  const [teamAName, setTeamAName] = useState("Team A");
+  const [teamBName, setTeamBName] = useState("Team B");
+  const [teams, setTeams] = useState({ A: [], B: [] });
+
+  const handleToggle = (index) => {
+    const newPlayers = [...players];
+    newPlayers[index].plays = !newPlayers[index].plays;
+    setPlayers(newPlayers);
+  };
+
+  const handlePositionChange = (index, position) => {
+    const newPlayers = [...players];
+    newPlayers[index].position = position;
+    setPlayers(newPlayers);
+  };
+
+  const shuffle = (array) => array.sort(() => Math.random() - 0.5);
+
+  const createTeams = () => {
+    const activePlayers = players.filter((p) => p.plays);
+    const goalkeepers = activePlayers.filter((p) => p.position === "Kaleci");
+    const others = shuffle(activePlayers.filter((p) => p.position !== "Kaleci"));
+
+    if (goalkeepers.length < 2) {
+      alert("En az 2 kaleci seçilmelidir.");
+      return;
+    }
+
+    const teamA = [goalkeepers[0]];
+    const teamB = [goalkeepers[1]];
+
+    others.forEach((player, i) => {
+      if (i % 2 === 0) teamA.push(player);
+      else teamB.push(player);
+    });
+
+    setTeams({ A: teamA, B: teamB });
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <div className="flex gap-4">
+        <Input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} className="w-1/2" />
+        <Input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} className="w-1/2" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {players.map((player, index) => (
+          <Card key={index}>
+            <CardContent className="flex items-center justify-between p-2">
+              <Input
+                value={player.name}
+                onChange={(e) => {
+                  const newPlayers = [...players];
+                  newPlayers[index].name = e.target.value;
+                  setPlayers(newPlayers);
+                }}
+                className="w-1/3"
+              />
+              <Select
+                value={player.position}
+                onValueChange={(value) => handlePositionChange(index, value)}
+              >
+                <SelectTrigger className="w-1/3">
+                  <SelectValue placeholder="Mevki" />
+                </SelectTrigger>
+                <SelectContent>
+                  {positions.map((pos) => (
+                    <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Checkbox
+                checked={player.plays}
+                onCheckedChange={() => handleToggle(index)}
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Button onClick={createTeams} className="w-full">Takımları Oluştur</Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {["A", "B"].map((key) => (
+          <Card key={key}>
+            <CardContent className="p-4 space-y-2">
+              <h2 className="text-xl font-bold">{key === "A" ? teamAName : teamBName}</h2>
+              {teams[key].map((p, i) => (
+                <div key={i} className="flex justify-between">
+                  <span>{p.name}</span>
+                  <span className="text-muted-foreground">{p.position}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
